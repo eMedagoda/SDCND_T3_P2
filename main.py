@@ -59,29 +59,33 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
     # TODO: Implement function
 
-    # Layer 7
+    # Layer 7 (1x1 convolution)
     layer7_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same',
                                 kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
+    # Upsample
     layer7_upsample = tf.layers.conv2d_transpose(layer7_1x1, num_classes, 4, 2, padding='same',
                                 kernel_regularizer = tf.contrib.layers.l2_regularizer(1e-3))
 
-    # Layer 4
+    # Layer 4 (1x1 convolution)
     layer4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same',
                                 kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
+    # Add pooling layer 4 (skip connection)
     layer4_add = tf.add(layer4_1x1, layer7_upsample)
 
+    # Upsample
     layer4_upsample = tf.layers.conv2d_transpose(layer4_add, num_classes, 4, 2, padding='same',
                                 kernel_regularizer = tf.contrib.layers.l2_regularizer(1e-3))
 
-    # Layer 3
+    # Layer 3 (1x1 convolution)
     layer3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same',
                                 kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
-
+    # Add pooling layer 3 (skip connection)
     layer3_add = tf.add(layer3_1x1, layer4_upsample)
 
+    # Upsample
     layer3_upsample = tf.layers.conv2d_transpose(layer3_add, num_classes, 16, 8, padding='same',
                                 kernel_regularizer = tf.contrib.layers.l2_regularizer(1e-3))
 
@@ -136,8 +140,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         print("EPOCH {} ...".format(i + 1))
         for image, label in get_batches_fn(batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss],
-                               feed_dict={input_image: image, correct_label: label, keep_prob: 0.8,
-                                          learning_rate: 0.0005})
+                               feed_dict={input_image: image, correct_label: label, keep_prob: 0.8, learning_rate: 0.0005})
             print("Loss: = {:.3f}".format(loss))
         print()
 
